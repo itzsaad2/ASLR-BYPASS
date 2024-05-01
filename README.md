@@ -5,7 +5,6 @@
 2. [Part1: Breaking ASLR](#part-1-breaking-aslr)
 3. [Part 1A: Egghunter (20%)](#part-1a-egghunter-20)
 4. [Part 1B: The prefetch Instruction (40%)](#part-1b-the-prefetch-instruction-40)
-5. [Part 1C: Speculative Probing (Bonus 10%)](#part-1c-speculative-probing-bonus-10)
 6. [Part 2: Code Reuse Attacks](#part-2-code-reuse-attacks)
 7. [Part 2A:  ret2win  (10 %)](#Part-2A-ret2win-10)
 8. [Part 2B: Return Oriented Programming (ROP) (20%)](#Part-2B-Return-Oriented-Programming-ROP-20)
@@ -241,52 +240,6 @@ void prefetch(void* p)
 ```
 
 Your code will need to run in 5 seconds or less and should produce the correct result 90% of the time or better.
-
-
-![Exercise 1.3](/images/exercise-1-3.png)
-
-## Part 1C: Speculative Probing (Bonus 10%)
-
-![Warning](/images/warning-1.png)
-
-Having access to the prefetch instruction makes things too easy. Additionally, not all architectures have such a convenient instruction for performing attacks. **Speculative Probing** [2] is a more general technique that has been shown to work on many architectures. We will be implementing a modified version of the Code Region Probing attack described in Section 5.1 of the Speculative Probing paper.
-
-To conduct a speculative probing attack, you will write and exploit your _own_ spectre gadget! Hereʼs an overview of how it works.
-
-First, you will write your own Spectre gadget. Below is pseudocode you can use as a guide for your speculative probing gadget. Write this as a C function in `part1C.c`.
-
-```
-def speculative_probing_gadget(condition, guess, controlled_memory):
- if condition: 
-
- # Access 1: Derefence the "guess" address (if it is mapped). 
-
- idx = load(guess)
- # If guess was not mapped, we will crash here.
- # Hopefully all crashes happen under speculation so the program doesn't crash! 
- 
- # Access 2: Modify some controlled memory at an index dependent on the first load. 
- # This only happens if the first load didn't crash, since the index is
- # a function of the contents of the first load.
- controlled_memory[idx] += 1
-```
-
-Youʼll notice that this gadget operates slightly different from typical Spectre gadgets. Here, we donʼt actually care about the value of the first load. Instead, we want to determine whether or not the load was _successful_.
-
-There are two cases for our guess address: either our current guess is correct, or it isnʼt. If we have the right address, we can read freely from it without any issues. However, if it isnʼt mapped, reading from it will cause a page fault exception (that we will observe as a segfault). Just one segfault will crash the whole program.
-
-So instead, letʼs have the crashes run under speculation, and use a side channel to learn whether or not a crash happened.
-
-![Key Idea 3](/images/key-idea-3.png)
-
-After creating the gadget, you will need to control it. You can use the following as a high-level overview of a potential attack:
-
-1. Allocate a chunk of memory to use.
-2. Train the branch predictor for your `speculative_probing_gadget`.
-3. Try an address with `speculative_probing_gadget`.
-4. Learn whether or not a load occurred with time_access to your controlled memory.
-
-There are a few engineering problems to solve. Notably, the contents of probed memory could be anything. How do you know idx's value was? Is there a way to make our attack access `controlled_memory` the same way regardless of way `idx` was?
 
 ![Exercise 1.5](/images/exercise-1-5.png)
 
