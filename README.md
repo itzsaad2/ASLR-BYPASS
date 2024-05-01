@@ -717,6 +717,30 @@ As ASLR slides everything together by applying a constant offset, `gadget2` will
 
 ![Key Idea 5](/images/key-idea-5.png)
 
+### Performing the Attack
+
+For Part 3, you will need to reconstruct your ROP chain using the gadgets dumped from `objdump`. Then, you will combine your code from Part 1 with the reconstructed Part 2 chain to complete a full ROP attack in the hidden page.
+
+Your attack will do the following:
+
+1. Locate the hidden `mmap` page with your choice of technique from Part 1.
+2. Construct a ROP chain using the gadgets in the hidden page (with offsets calculated from `objdump`).
+3. Call `vulnerable` with your payload configured.
+
+![Exercise 3.1](/images/exercise-3.png)
+
+On success, you should see the success flag printed to the console.
+
+### A note on realism
+You may be wondering why we bother with jumping to a sequence of ROP gadgets if we already have control of C code. This is to simulate attacking a real program without the ability to run code within the victim context (for example, attacking the kernel from userspace, or attacking a remote server over a `netcat` connection).
+
+### Part 3 Checklist
+
+Before you submit this assignment, make sure that you have:
+
+* Completed the code for Exercise 3-1.
+* Checked your code with the check script and made sure it passes.
+
 ## Acknowledgments
 
 This assignment has been adapted from a similar computer security course at MIT.
